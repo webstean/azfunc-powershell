@@ -1,20 +1,34 @@
 {
+  "_comment_file": "Azure Function binding configuration for recordh endpoint",
+  "_comment_security": "Manual Entra ID token validation in run.ps1 provides authentication. authLevel=anonymous bypasses Azure Functions built-in auth for fine-grained control.",
   "bindings": [
     {
+      "_comment_trigger": "HTTP POST endpoint for SharePoint site creation",
       "authLevel": "anonymous",
+      "_comment_authLevel": "Set to 'anonymous' because manual JWT token validation is performed in run.ps1. This allows fine-grained control over Entra ID authentication including OBO flows. All requests are validated before processing.",
       "type": "httpTrigger",
       "direction": "in",
       "name": "Request",
       "methods": [
         "post"
       ],
+      "_comment_methods": "Only POST allowed. GET/PUT/DELETE rejected by Azure Functions before reaching code.",
       "route": "recordh",
-      "_comment": "authLevel is 'anonymous' because manual Entra ID token validation is performed in run.ps1. This allows for fine-grained control over authentication and authorization including OBO flows."
+      "_comment_route": "Accessible at /api/recordh (routePrefix defined in host.json). No route parameters."
     },
     {
+      "_comment_output": "HTTP response binding for returning results to caller",
       "type": "http",
       "direction": "out",
       "name": "Response"
     }
-  ]
+  ],
+  "_security_notes": {
+    "authentication": "Manual Entra ID JWT token validation required (see Test-EntraToken function)",
+    "authorization": "Requires 'recordh.create' scope (delegated) or role (application)",
+    "token_validation": "Validates audience, tenant, expiration, and required permissions",
+    "obo_support": "Supports On-Behalf-Of flow for delegated access scenarios",
+    "rate_limiting": "Consider implementing rate limiting via Azure API Management",
+    "monitoring": "All requests logged to Application Insights for security monitoring"
+  }
 }

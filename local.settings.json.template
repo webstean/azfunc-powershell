@@ -1,12 +1,45 @@
 {
+  "_comment_file": "Local development settings template for Azure Functions. Copy to local.settings.json and fill in your values.",
+  "_comment_security": "NEVER commit local.settings.json to source control. Contains sensitive configuration including client secrets.",
   "IsEncrypted": false,
+  "_comment_IsEncrypted": "Set to false for local development. Azure manages encryption in production.",
   "Values": {
+    "_comment_Values": "Environment variables available to the function app at runtime",
+    
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "_comment_AzureWebJobsStorage": "Storage account connection string. Use 'UseDevelopmentStorage=true' for local Azurite emulator, or Azure Storage connection string for cloud.",
+    
     "FUNCTIONS_WORKER_RUNTIME": "powershell",
+    "_comment_FUNCTIONS_WORKER_RUNTIME": "Runtime language. Must be 'powershell' for PowerShell functions.",
+    
     "FUNCTIONS_WORKER_RUNTIME_VERSION": "7.2",
+    "_comment_FUNCTIONS_WORKER_RUNTIME_VERSION": "PowerShell version. 7.2 is LTS version with security updates.",
+    
     "ENTRA_CLIENT_ID": "<your-entra-app-client-id>",
+    "_comment_ENTRA_CLIENT_ID": "Azure AD Application (client) ID. Used for token validation and OBO flow. Get from Azure Portal > App Registrations.",
+    
     "ENTRA_TENANT_ID": "<your-entra-tenant-id>",
+    "_comment_ENTRA_TENANT_ID": "Azure AD Tenant (directory) ID. Ensures tokens are from correct tenant. Get from Azure Portal > Azure Active Directory.",
+    
     "ENTRA_AUDIENCE": "api://<your-entra-app-client-id>",
-    "REQUIRED_SCOPE": "recordh.create"
+    "_comment_ENTRA_AUDIENCE": "Expected token audience (aud claim). Usually api://<client-id>. Must match token issuer configuration.",
+    
+    "ENTRA_CLIENT_SECRET": "<your-client-secret-for-obo-flow>",
+    "_comment_ENTRA_CLIENT_SECRET": "SENSITIVE: Client secret for OBO token exchange. Required for On-Behalf-Of flow. Store in Azure Key Vault in production using Key Vault references: @Microsoft.KeyVault(SecretUri=https://vault.vault.azure.net/secrets/name)",
+    
+    "REQUIRED_SCOPE": "recordh.create",
+    "_comment_REQUIRED_SCOPE": "Scope or role name required for authorization. Can be customized per deployment."
+  },
+  "_security_notes": {
+    "local_development": "This template is for local development only. Never commit actual values.",
+    "production_secrets": "In Azure, use App Settings with Key Vault references for secrets",
+    "key_vault_example": "ENTRA_CLIENT_SECRET: @Microsoft.KeyVault(SecretUri=https://myvault.vault.azure.net/secrets/ClientSecret)",
+    "managed_identity": "Use Managed Identity instead of client secret when possible",
+    "app_registration": "Requires Azure AD App Registration with API permissions and exposed API scopes",
+    "required_permissions": {
+      "api_permissions": "Sites.FullControl.All (for SharePoint operations)",
+      "exposed_api": "recordh.create scope exposed in app registration",
+      "app_roles": "recordh.create role for service-to-service authentication"
+    }
   }
 }
