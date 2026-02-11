@@ -1,0 +1,12 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "powershell",
+    "FUNCTIONS_WORKER_RUNTIME_VERSION": "7.2",
+    "ENTRA_CLIENT_ID": "<your-entra-app-client-id>",
+    "ENTRA_TENANT_ID": "<your-entra-tenant-id>",
+    "ENTRA_AUDIENCE": "api://<your-entra-app-client-id>",
+    "REQUIRED_SCOPE": "recordh.create"
+  }
+}
