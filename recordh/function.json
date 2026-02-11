@@ -14,7 +14,9 @@
         "post",
         "put",
         "delete",
-        "patch"
+        "patch",
+        "options",
+        "head"
       ],
       "_comment_methods": "All methods accepted at binding level. Method validation with friendly error messages is performed in run.ps1.",
       "route": "recordh",
