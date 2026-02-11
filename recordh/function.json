@@ -8,7 +8,8 @@
       "methods": [
         "post"
       ],
-      "route": "recordh"
+      "route": "recordh",
+      "_comment": "authLevel is 'anonymous' because manual Entra ID token validation is performed in run.ps1. This allows for fine-grained control over authentication and authorization including OBO flows."
     },
     {
       "type": "http",

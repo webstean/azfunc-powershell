@@ -230,18 +230,31 @@ if ([string]::IsNullOrEmpty($requestBody.siteTitle)) {
 try {
     Write-Host "Creating SharePoint site: $($requestBody.siteTitle)"
     
-    # For OBO flow with delegated access, acquire SharePoint token
-    $oboToken = $null
+    # For OBO flow with delegated access, acquire downstream tokens
+    $sharePointToken = $null
+    $graphToken = $null
+    
     if ($tokenValidation.AccessType -eq "Delegated") {
-        $oboToken = Get-OBOToken -UserToken $authHeader -TargetResource "https://graph.microsoft.com"
-        if ($oboToken) {
+        # Get SharePoint token for PnP operations (if tenantUrl is provided)
+        if ($requestBody.tenantUrl) {
+            $sharePointToken = Get-OBOToken -UserToken $authHeader -TargetResource $requestBody.tenantUrl
+            if ($sharePointToken) {
+                Write-Host "Successfully acquired OBO token for SharePoint"
+            }
+        }
+        
+        # Get Microsoft Graph token if needed for additional operations
+        $graphToken = Get-OBOToken -UserToken $authHeader -TargetResource "https://graph.microsoft.com"
+        if ($graphToken) {
             Write-Host "Successfully acquired OBO token for Microsoft Graph"
         }
     }
     
-    # Example site creation logic (pseudo-code - adapt to your needs)
-    # Connect-PnPOnline -Url $requestBody.tenantUrl -AccessToken $oboToken
-    # New-PnPSite -Type TeamSite -Title $requestBody.siteTitle -Alias $requestBody.siteAlias
+    # Example site creation logic using PnP PowerShell with OBO token
+    # if ($sharePointToken) {
+    #     Connect-PnPOnline -Url $requestBody.tenantUrl -AccessToken $sharePointToken
+    #     $newSite = New-PnPSite -Type TeamSite -Title $requestBody.siteTitle -Alias $requestBody.siteAlias
+    # }
     
     $responseBody = @{
         success = $true
