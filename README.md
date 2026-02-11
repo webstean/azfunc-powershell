@@ -192,6 +192,8 @@ Health check endpoint for monitoring service availability.
 
 Creates a new SharePoint site.
 
+**HTTP Method**: POST only. Requests with other HTTP methods (GET, PUT, DELETE, etc.) will receive a 405 Method Not Allowed error with guidance.
+
 **Authentication**: Required (Bearer token with `recordh.create` scope/role)
 
 **Request Headers**:
@@ -220,6 +222,15 @@ Creates a new SharePoint site.
 ```
 
 **Error Responses**:
+- `405 Method Not Allowed`: Non-POST method used (only POST is supported)
+  ```json
+  {
+    "error": "Method Not Allowed",
+    "message": "This endpoint only supports POST requests. Please use POST method to access this API.",
+    "allowedMethods": ["POST"],
+    "receivedMethod": "GET"
+  }
+  ```
 - `401 Unauthorized`: Missing or invalid token, missing required scope/role
 - `400 Bad Request`: Invalid request body or missing required parameters
 - `500 Internal Server Error`: Site creation failed
