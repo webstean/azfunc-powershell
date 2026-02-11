@@ -278,6 +278,25 @@ mkdir myfunction
 - ✅ Use Azure Key Vault for storing secrets in production
 - ✅ Enable Application Insights for monitoring and logging
 
+### Important Security Notes
+
+**JWT Signature Verification**: The current implementation validates JWT token claims (audience, tenant, expiration, scopes/roles) but does not perform cryptographic signature verification. This design is appropriate when:
+- The function is deployed behind Azure API Management or Azure App Service Authentication/EasyAuth
+- The function is used in internal/private scenarios where the token source is trusted
+
+For external-facing APIs or additional security hardening, consider:
+- Enabling Azure App Service Authentication (EasyAuth) to handle full token validation
+- Implementing full JWT signature verification using Azure AD's JWKS endpoint
+- Using a PowerShell JWT library that validates signatures
+
+**Production Deployment Best Practices**:
+- Always use HTTPS endpoints (enforced by Azure Functions)
+- Store secrets in Azure Key Vault with Key Vault references
+- Use Managed Identity instead of client secrets where possible
+- Enable Azure Monitor and Application Insights for security monitoring
+- Implement rate limiting to prevent abuse
+- Regularly update PowerShell modules for security patches
+
 ## Troubleshooting
 
 ### Token Validation Failures
