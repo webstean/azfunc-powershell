@@ -304,7 +304,6 @@ function Get-OBOToken {
         $response = Invoke-RestMethod -Uri $tokenEndpoint -Method Post -Body $body -ContentType "application/x-www-form-urlencoded"
         
         # Return the access token for downstream resource
-        # Return the access token for downstream resource
         return $response.access_token
     }
     catch {
@@ -439,8 +438,6 @@ try {
     #     Disconnect-PnPOnline
     # }
     
-    # STEP 6: SUCCESS RESPONSE
-    # Return success response with site creation details
     # STEP 6: SUCCESS RESPONSE
     # Return success response with site creation details
     $responseBody = @{
