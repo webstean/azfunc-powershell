@@ -10,9 +10,13 @@
       "direction": "in",
       "name": "Request",
       "methods": [
-        "post"
+        "get",
+        "post",
+        "put",
+        "delete",
+        "patch"
       ],
-      "_comment_methods": "Only POST allowed. GET/PUT/DELETE rejected by Azure Functions before reaching code.",
+      "_comment_methods": "All methods accepted at binding level. Method validation with friendly error messages is performed in run.ps1.",
       "route": "recordh",
       "_comment_route": "Accessible at /api/recordh (routePrefix defined in host.json). No route parameters."
     },
