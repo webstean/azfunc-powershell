@@ -1,5 +1,7 @@
 # Azure Function - PowerShell with Entra ID Authentication
 
+[![Deploy Azure Function](https://github.com/webstean/azfunc-powershell/actions/workflows/deploy.yml/badge.svg)](https://github.com/webstean/azfunc-powershell/actions/workflows/deploy.yml)
+
 This repository contains an Azure Function App built with PowerShell that provides a secure API endpoint for creating SharePoint sites. The function is protected with Microsoft Entra ID (formerly Azure AD) authentication and supports both application and delegated access patterns, including On-Behalf-Of (OBO) flows.
 
 ## Features
@@ -9,18 +11,24 @@ This repository contains an Azure Function App built with PowerShell that provid
 - ✅ **OBO Flow Support**: Enables delegated access for user-context operations
 - ✅ **PnP PowerShell Integration**: Full support for SharePoint operations via PnP.PowerShell module
 - ✅ **Extensible Architecture**: Easy to add more functions to the same Function App
+- ✅ **CI/CD with GitHub Actions**: Automated deployment using OIDC authentication (no stored credentials)
 
 ## Project Structure
 
 ```
 azfunc-powershell/
-├── host.json                 # Azure Functions runtime configuration
-├── profile.ps1              # PowerShell initialization script
-├── requirements.psd1        # PowerShell module dependencies (Az, PnP.PowerShell)
-├── local.settings.json      # Local development settings (not committed)
-└── recordh/                 # HTTP-triggered function for SharePoint site creation
-    ├── function.json        # Function binding configuration
-    └── run.ps1              # Function implementation
+├── .github/
+│   ├── workflows/
+│   │   └── deploy.yml         # GitHub Actions deployment workflow
+│   └── SECRETS.md             # Required secrets configuration guide
+├── host.json                  # Azure Functions runtime configuration
+├── profile.ps1                # PowerShell initialization script
+├── requirements.psd1          # PowerShell module dependencies (Az, PnP.PowerShell)
+├── local.settings.json        # Local development settings (not committed)
+├── DEPLOYMENT.md              # Comprehensive deployment guide
+└── recordh/                   # HTTP-triggered function for SharePoint site creation
+    ├── function.json          # Function binding configuration
+    └── run.ps1                # Function implementation
 ```
 
 ## Prerequisites
