@@ -6,6 +6,7 @@ This repository contains an Azure Function App built with PowerShell that provid
 
 ## Features
 
+- ✅ **Health Endpoint**: Public /api/health endpoint for monitoring and service availability checks
 - ✅ **Entra ID Authentication**: Requires valid access tokens with proper scopes/roles
 - ✅ **recordh.create Scope/Role**: Custom permission for SharePoint site creation
 - ✅ **OBO Flow Support**: Enables delegated access for user-context operations
@@ -17,18 +18,21 @@ This repository contains an Azure Function App built with PowerShell that provid
 
 ```
 azfunc-powershell/
+├── host.json                 # Azure Functions runtime configuration
+├── profile.ps1              # PowerShell initialization script
+├── requirements.psd1        # PowerShell module dependencies (Az, PnP.PowerShell)
+├── local.settings.json      # Local development settings (not committed)
+├── health/                  # HTTP-triggered function for health checks
+│   ├── function.json        # Function binding configuration
+│   └── run.ps1              # Health check implementation
+└── recordh/                 # HTTP-triggered function for SharePoint site creation
+    ├── function.json        # Function binding configuration
+    └── run.ps1              # Function implementation
 ├── .github/
 │   ├── workflows/
 │   │   └── deploy.yml         # GitHub Actions deployment workflow
 │   └── SECRETS.md             # Required secrets configuration guide
-├── host.json                  # Azure Functions runtime configuration
-├── profile.ps1                # PowerShell initialization script
-├── requirements.psd1          # PowerShell module dependencies (Az, PnP.PowerShell)
-├── local.settings.json        # Local development settings (not committed)
 ├── DEPLOYMENT.md              # Comprehensive deployment guide
-└── recordh/                   # HTTP-triggered function for SharePoint site creation
-    ├── function.json          # Function binding configuration
-    └── run.ps1                # Function implementation
 ```
 
 ## Prerequisites
@@ -156,6 +160,33 @@ curl -X POST http://localhost:7071/api/recordh \
 ```
 
 ## API Reference
+
+### GET /api/health
+
+Health check endpoint for monitoring service availability.
+
+**Authentication**: Not required (public endpoint)
+
+**Request Headers**: None required
+
+**Response (200 OK)**:
+```json
+{
+  "status": "healthy",
+  "service": "azfunc-powershell",
+  "timestamp": "2024-02-11T22:00:00.000Z",
+  "version": "1.0.0"
+}
+```
+
+**Use Cases**:
+- Azure Load Balancer health probes
+- Azure Application Gateway backend health checks
+- Kubernetes liveness/readiness probes
+- External monitoring services (Pingdom, StatusPage, etc.)
+- CI/CD deployment validation
+
+---
 
 ### POST /api/recordh
 

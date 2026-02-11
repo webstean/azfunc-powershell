@@ -1,0 +1,38 @@
+{
+  "_comment_file": "Azure Function binding configuration for health endpoint",
+  "_comment_security": "Health endpoint is public and does not require authentication. authLevel=anonymous allows external monitoring tools to check service health.",
+  "bindings": [
+    {
+      "_comment_trigger": "HTTP GET endpoint for health checks",
+      "authLevel": "anonymous",
+      "_comment_authLevel": "Set to 'anonymous' to allow unauthenticated access for health monitoring. This is standard practice for health endpoints.",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "Request",
+      "methods": [
+        "get"
+      ],
+      "_comment_methods": "Only GET allowed. Other HTTP methods are rejected by Azure Functions before reaching code.",
+      "route": "health",
+      "_comment_route": "Accessible at /api/health (routePrefix defined in host.json). Standard health check endpoint path."
+    },
+    {
+      "_comment_output": "HTTP response binding for returning health status to caller",
+      "type": "http",
+      "direction": "out",
+      "name": "Response"
+    }
+  ],
+  "_usage_notes": {
+    "purpose": "Provides a health check endpoint for monitoring and orchestration systems",
+    "authentication": "No authentication required - public endpoint",
+    "response_format": "JSON with status, timestamp, and service information",
+    "use_cases": [
+      "Azure Load Balancer health probes",
+      "Azure Application Gateway health checks",
+      "Kubernetes liveness/readiness probes",
+      "External monitoring services (Pingdom, StatusPage, etc.)",
+      "CI/CD deployment validation"
+    ]
+  }
+}
