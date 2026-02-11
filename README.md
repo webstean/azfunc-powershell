@@ -1,5 +1,7 @@
 # Azure Function - PowerShell with Entra ID Authentication
 
+[![Deploy Azure Function](https://github.com/webstean/azfunc-powershell/actions/workflows/deploy.yml/badge.svg)](https://github.com/webstean/azfunc-powershell/actions/workflows/deploy.yml)
+
 This repository contains an Azure Function App built with PowerShell that provides a secure API endpoint for creating SharePoint sites. The function is protected with Microsoft Entra ID (formerly Azure AD) authentication and supports both application and delegated access patterns, including On-Behalf-Of (OBO) flows.
 
 ## Features
@@ -9,18 +11,24 @@ This repository contains an Azure Function App built with PowerShell that provid
 - ✅ **OBO Flow Support**: Enables delegated access for user-context operations
 - ✅ **PnP PowerShell Integration**: Full support for SharePoint operations via PnP.PowerShell module
 - ✅ **Extensible Architecture**: Easy to add more functions to the same Function App
+- ✅ **CI/CD with GitHub Actions**: Automated deployment using OIDC authentication (no stored credentials)
 
 ## Project Structure
 
 ```
 azfunc-powershell/
-├── host.json                 # Azure Functions runtime configuration
-├── profile.ps1              # PowerShell initialization script
-├── requirements.psd1        # PowerShell module dependencies (Az, PnP.PowerShell)
-├── local.settings.json      # Local development settings (not committed)
-└── recordh/                 # HTTP-triggered function for SharePoint site creation
-    ├── function.json        # Function binding configuration
-    └── run.ps1              # Function implementation
+├── .github/
+│   ├── workflows/
+│   │   └── deploy.yml         # GitHub Actions deployment workflow
+│   └── SECRETS.md             # Required secrets configuration guide
+├── host.json                  # Azure Functions runtime configuration
+├── profile.ps1                # PowerShell initialization script
+├── requirements.psd1          # PowerShell module dependencies (Az, PnP.PowerShell)
+├── local.settings.json        # Local development settings (not committed)
+├── DEPLOYMENT.md              # Comprehensive deployment guide
+└── recordh/                   # HTTP-triggered function for SharePoint site creation
+    ├── function.json          # Function binding configuration
+    └── run.ps1                # Function implementation
 ```
 
 ## Prerequisites
@@ -225,11 +233,26 @@ This allows the function to:
 
 ## Deployment
 
-### Deploy to Azure
+### Automated Deployment with GitHub Actions (Recommended)
 
-1. Create Function App:
+This repository includes a GitHub Actions workflow that uses OIDC (OpenID Connect) authentication to securely deploy to Azure without storing credentials.
+
+#### Prerequisites
+
+1. **Azure Resources**: Create the required Azure resources:
 
 ```bash
+# Create resource group
+az group create --name <resource-group> --location <region>
+
+# Create storage account
+az storage account create \
+  --name <storage-account> \
+  --resource-group <resource-group> \
+  --location <region> \
+  --sku Standard_LRS
+
+# Create Function App
 az functionapp create \
   --name <function-app-name> \
   --resource-group <resource-group> \
@@ -240,18 +263,122 @@ az functionapp create \
   --storage-account <storage-account>
 ```
 
-2. Deploy the function code:
+2. **Configure OIDC for GitHub Actions**: Set up federated identity credentials to allow GitHub Actions to authenticate to Azure without secrets:
+
+```bash
+# Get your GitHub repository information
+GITHUB_ORG="<your-github-org>"
+GITHUB_REPO="<your-github-repo>"
+
+# Create an Azure AD application for GitHub Actions
+APP_ID=$(az ad app create \
+  --display-name "GitHub-Actions-${GITHUB_REPO}" \
+  --query appId -o tsv)
+
+# Create a service principal
+az ad sp create --id $APP_ID
+
+# Get the service principal object ID
+SP_OBJECT_ID=$(az ad sp show --id $APP_ID --query id -o tsv)
+
+# Assign Contributor role to the service principal for the resource group
+az role assignment create \
+  --assignee $APP_ID \
+  --role Contributor \
+  --scope /subscriptions/<subscription-id>/resourceGroups/<resource-group>
+
+# Create federated identity credential for the main branch
+az ad app federated-credential create \
+  --id $APP_ID \
+  --parameters '{
+    "name": "github-federated-credential",
+    "issuer": "https://token.actions.githubusercontent.com",
+    "subject": "repo:'"${GITHUB_ORG}/${GITHUB_REPO}"':ref:refs/heads/main",
+    "audiences": ["api://AzureADTokenExchange"]
+  }'
+
+# (Optional) Create federated credential for pull requests
+az ad app federated-credential create \
+  --id $APP_ID \
+  --parameters '{
+    "name": "github-pr-credential",
+    "issuer": "https://token.actions.githubusercontent.com",
+    "subject": "repo:'"${GITHUB_ORG}/${GITHUB_REPO}"':pull_request",
+    "audiences": ["api://AzureADTokenExchange"]
+  }'
+```
+
+3. **Configure GitHub Secrets**: Add the following secrets to your GitHub repository (Settings → Secrets and variables → Actions):
+
+```
+AZURE_CLIENT_ID=<application-client-id>
+AZURE_TENANT_ID=<your-tenant-id>
+AZURE_SUBSCRIPTION_ID=<your-subscription-id>
+AZURE_FUNCTIONAPP_NAME=<function-app-name>
+AZURE_RESOURCE_GROUP=<resource-group>
+
+# Entra ID configuration for the function
+ENTRA_CLIENT_ID=<your-entra-app-client-id>
+ENTRA_TENANT_ID=<your-tenant-id>
+ENTRA_AUDIENCE=api://<your-entra-app-client-id>
+ENTRA_CLIENT_SECRET=<your-entra-client-secret>
+REQUIRED_SCOPE=recordh.create
+```
+
+4. **Create GitHub Environment** (Optional but recommended):
+   - Go to repository Settings → Environments
+   - Create a `production` environment
+   - Add protection rules (require reviewers, branch restrictions, etc.)
+   - Add the secrets to this environment
+
+#### Triggering Deployments
+
+**Automatic deployment on push to main**:
+```bash
+git push origin main
+```
+
+**Manual deployment via GitHub UI**:
+1. Go to Actions tab in your GitHub repository
+2. Select "Deploy Azure Function" workflow
+3. Click "Run workflow"
+4. Choose the environment (production/staging)
+5. Click "Run workflow"
+
+**Manual deployment via GitHub CLI**:
+```bash
+gh workflow run deploy.yml --ref main -f environment=production
+```
+
+#### Monitoring Deployments
+
+View deployment status:
+- Navigate to the **Actions** tab in your GitHub repository
+- Click on the workflow run to see detailed logs
+- Each step shows execution status and output
+
+### Manual Deployment with Azure Functions Core Tools
+
+For local testing or one-time deployments:
+
+1. Deploy the function code:
 
 ```bash
 func azure functionapp publish <function-app-name>
 ```
 
-3. Enable Managed Identity (optional but recommended):
+2. Configure application settings:
 
 ```bash
-az functionapp identity assign \
+az functionapp config appsettings set \
   --name <function-app-name> \
-  --resource-group <resource-group>
+  --resource-group <resource-group> \
+  --settings \
+    ENTRA_CLIENT_ID="<your-app-client-id>" \
+    ENTRA_TENANT_ID="<your-tenant-id>" \
+    ENTRA_AUDIENCE="api://<your-app-client-id>" \
+    ENTRA_CLIENT_SECRET="<your-client-secret>" \
+    REQUIRED_SCOPE="recordh.create"
 ```
 
 ## Adding More Functions
@@ -297,6 +424,15 @@ For external-facing APIs or additional security hardening, consider:
 - Implement rate limiting to prevent abuse
 - Regularly update PowerShell modules for security patches
 
+**GitHub Actions Security**:
+- ✅ Uses OIDC authentication (no long-lived credentials stored in GitHub)
+- ✅ Federated identity credentials are scoped to specific repository and branches
+- ✅ Secrets are stored in GitHub Secrets (encrypted at rest)
+- ✅ Use GitHub Environments for additional protection (required reviewers, branch restrictions)
+- ✅ Workflow has minimal permissions (`id-token: write`, `contents: read`)
+- ⚠️ Regularly rotate Azure service principal credentials
+- ⚠️ Review federated credential subjects to prevent unauthorized access
+
 ## Troubleshooting
 
 ### Token Validation Failures
@@ -316,6 +452,24 @@ For external-facing APIs or additional security hardening, consider:
 - Verify `ENTRA_CLIENT_SECRET` is configured
 - Ensure the client app is authorized for OBO
 - Check that required API permissions are granted
+
+### GitHub Actions Deployment Failures
+
+**OIDC Authentication Issues**:
+- Verify federated identity credential subject matches your repository
+- Check that `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and `AZURE_SUBSCRIPTION_ID` secrets are set correctly
+- Ensure the service principal has Contributor role on the resource group
+- Verify the federated credential issuer is `https://token.actions.githubusercontent.com`
+
+**Deployment Package Issues**:
+- Ensure all required files (host.json, profile.ps1, requirements.psd1, function folders) are included
+- Check GitHub Actions logs for file copy or zip errors
+- Verify the deployment package size is within Azure limits
+
+**Function App Configuration Issues**:
+- Confirm all required secrets are set in GitHub (ENTRA_CLIENT_ID, ENTRA_TENANT_ID, etc.)
+- Verify the Function App name and resource group are correct
+- Check that the Function App is configured for PowerShell 7.2 runtime
 
 ## Resources
 
