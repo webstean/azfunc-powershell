@@ -319,6 +319,31 @@ function Get-OBOToken {
 
 Write-Host "Processing recordh function request"
 
+# STEP 0: HTTP METHOD VALIDATION - Only POST is supported
+# Check HTTP method before authentication to provide friendly error message
+$httpMethod = $Request.Method
+Write-Host "HTTP Method: $httpMethod"
+
+if ($httpMethod -ne "POST") {
+    # Return 405 Method Not Allowed with friendly error message
+    $errorResponse = @{
+        error = "Method Not Allowed"
+        message = "This endpoint only supports POST requests. Please use POST method to access this API."
+        allowedMethods = @("POST")
+        receivedMethod = $httpMethod
+    }
+    
+    Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
+        StatusCode = [HttpStatusCode]::MethodNotAllowed
+        Headers = @{
+            "Content-Type" = "application/json"
+            "Allow" = "POST"
+        }
+        Body = ($errorResponse | ConvertTo-Json)
+    })
+    return
+}
+
 # STEP 1: AUTHENTICATION - Validate Entra ID access token
 # Get Authorization header from HTTP request
 $authHeader = $Request.Headers.Authorization
